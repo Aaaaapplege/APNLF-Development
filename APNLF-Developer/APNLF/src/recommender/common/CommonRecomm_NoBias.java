@@ -14,7 +14,6 @@ public abstract class CommonRecomm_NoBias implements ComonRecommInterface {
 	public double cacheTotalTime = 0;
 	public double minTotalTime = 0;
 
-	// 进行预测时是否需要考虑Mu和bias
 	public boolean ifBu = true;
 
 	public boolean ifBi = true;
@@ -39,35 +38,25 @@ public abstract class CommonRecomm_NoBias implements ComonRecommInterface {
 	public static double maxRating = 5;
 
 	public static double minRating = 0;
-	
-	//---------------------PSO自适应参数----------------------//
-	
-	
-	public static int lambdaMax = 9, lambdaMin = 8;       //8 ,7
-	public static int IMax = 22, IMin = 21;      //22, 21
-	public static int DMax = 19, DMin = 18;      //19, 18
-	
-	
-	
-	
 
-	// 全局均值
+	public static int lambdaMax = 9, lambdaMin = 8;     
+	public static int IMax = 22, IMin = 21;  
+	public static int DMax = 19, DMin = 18;      
+	
 	public double Mu = 0;
-	// 用戶偏差矩陣
+
 	public double userBias[];
 
 	public double minUserBias[];
 
 	public static double catchedUserBias[];
 
-	// 項目偏差矩陣
 	public double itemBias[];
 
 	public double minItemBias[];
 
 	public static double catchedItemBias[];
 
-	// 用户特征矩阵
 	public double[][] userFeatureArray;
 	public double[][] userFeatureArrayFinal;
 	
@@ -83,7 +72,6 @@ public abstract class CommonRecomm_NoBias implements ComonRecommInterface {
 
 	public static double[][] catchedUserFeatureArray;
 
-	// 项目特征矩阵
 	public double[][] itemFeatureArray;
 	public double[][] itemFeatureArrayFinal;
 	
@@ -98,18 +86,12 @@ public abstract class CommonRecomm_NoBias implements ComonRecommInterface {
 
 	public static double[][] catchedItemFeatureArray;
 
-	// NMF的辅助数组
 	public static double[][] userFactorUp, userFactorDown, itemFactorUp,
 			itemFactorDown;
 
 	public static double[] userBiasUp, userBiasDown, itemBiasUp, itemBiasDown;
-	// 特征维数
 	public static int featureDimension = 20;
-
-	// 训练轮数
 	public static int trainingRound = 1000;
-
-	// 特征初始值
 	public static double userFeatureInitMax = 0.004;
 
 	public static double userFeatureInitScale = 0.004;
@@ -120,11 +102,6 @@ public abstract class CommonRecomm_NoBias implements ComonRecommInterface {
 
 	public static int mappingScale = 1000;
 	public static double  errorinput = 0;
-
-	// public double featureInitMax = 0.0002;
-	//
-	// public double featureInitScale = 0.0004;
-	// 学习速率
 	public static double eta = 0.03;
 	
 	public static double ganma = 0.4;
@@ -136,7 +113,7 @@ public abstract class CommonRecomm_NoBias implements ComonRecommInterface {
 	public static double countRMSE=0;
 	public static double Kp, Ki, Kd;
 	public static double err=  0.000001;
-	//////////////////////////////////////////////////////////
+
 	public static int Num = 0;
 	public static double pertime;
 	public static int clectnum = 2;
@@ -146,8 +123,7 @@ public abstract class CommonRecomm_NoBias implements ComonRecommInterface {
 	public static int[] ideaindex;	
 	public static double[] realrating;
 	public static double NDCGresult;
-	///////////////////////////////////////////////////////
-	// 规则化参数
+
 
 	public static ArrayList<RTuple> trainData = null;
 	public static ArrayList<RTuple> validationData = null;
@@ -161,7 +137,7 @@ public abstract class CommonRecomm_NoBias implements ComonRecommInterface {
 	}
 
 	public static void initiStaticFeatures() {
-		// 加1是为了在序号上与ID保持一致
+
 		catchedItemFeatureArray = new double[maxItemID + 1][featureDimension];
 		catchedUserFeatureArray = new double[maxUserID + 1][featureDimension];
 		catchedUserBias = new double[maxUserID + 1];
@@ -171,7 +147,6 @@ public abstract class CommonRecomm_NoBias implements ComonRecommInterface {
 		idearating = new double[Num];
 		ideaindex = new int[Num];
 		realrating = new double[Num];
-		// 初始化特征矩阵,采用随机值,从而形成一个K阶逼近
 		Random random = new Random(System.currentTimeMillis());
 		for (int i = 1; i <= maxUserID; i++) {
 			int tempUB = random.nextInt(mappingScale);
@@ -197,7 +172,6 @@ public abstract class CommonRecomm_NoBias implements ComonRecommInterface {
 	}
 
 	public static void initNMFAuxArrays() {
-		// 加1是为了在序号上与ID保持一致
 		userFactorUp = new double[maxUserID + 1][featureDimension];
 		userFactorDown = new double[maxUserID + 1][featureDimension];
 		itemFactorUp = new double[maxItemID + 1][featureDimension];
@@ -211,7 +185,6 @@ public abstract class CommonRecomm_NoBias implements ComonRecommInterface {
 	}
 
 	public static void resetNMFAuxArrays() {
-		// 全部重置为0
 		for (int i = 1; i <= maxUserID; i++) {
 			userBiasUp[i] = 0;
 			userBiasDown[i] = 0;
@@ -231,7 +204,6 @@ public abstract class CommonRecomm_NoBias implements ComonRecommInterface {
 	}
 
 	public void initInstanceFeatures() {
-		// 加1是为了在序号上与ID保持一致
 		userBias = new double[maxUserID + 1];
 		itemBias = new double[maxItemID + 1];
 		minUserBias = new double[maxUserID + 1];
@@ -299,7 +271,6 @@ public abstract class CommonRecomm_NoBias implements ComonRecommInterface {
 	public static void initializeRatings(String trainFileName,
             String testFileName, String validationFileName, String separator)
 			throws NumberFormatException, IOException {
-		// 加入对RatingMap的初始化
 		initTrainData(trainFileName, separator);
 		initvalidationData(validationFileName, separator);
 		initTestData(testFileName, separator);
@@ -327,7 +298,6 @@ public abstract class CommonRecomm_NoBias implements ComonRecommInterface {
 			int iUserID = Integer.valueOf(personID);
 			int iItemID = Integer.valueOf(movieID);
 
-			// 记录下最大的itemid和userid；因为itemid和userid是连续的，所以最大的itemid和userid也代表了各自的数目
 			maxUserID = (maxUserID > iUserID) ? maxUserID : iUserID;
 			maxItemID = (maxItemID > iItemID) ? maxItemID : iItemID;
 
@@ -363,8 +333,6 @@ public abstract class CommonRecomm_NoBias implements ComonRecommInterface {
 				personRating = st.nextToken();
 			int iUserID = Integer.valueOf(personID);
 			int iItemID = Integer.valueOf(movieID);
-
-			// 记录下最大的itemid和userid；因为itemid和userid是连续的，所以最大的itemid和userid也代表了各自的数目
 			maxUserID = (maxUserID > iUserID) ? maxUserID : iUserID;
 			maxItemID = (maxItemID > iItemID) ? maxItemID : iItemID;
 			double dRating = Double.valueOf(personRating);
@@ -415,8 +383,6 @@ public abstract class CommonRecomm_NoBias implements ComonRecommInterface {
 				personRating = st.nextToken();
 			int iUserID = Integer.valueOf(personID);
 			int iItemID = Integer.valueOf(movieID);
-
-			// 记录下最大的itemid和userid；因为itemid和userid是连续的，所以最大的itemid和userid也代表了各自的数目
 			maxUserID = (maxUserID > iUserID) ? maxUserID : iUserID;
 			maxItemID = (maxItemID > iItemID) ? maxItemID : iItemID;
 
@@ -436,7 +402,6 @@ public abstract class CommonRecomm_NoBias implements ComonRecommInterface {
 		return dotMultiply(userFeatureArray[userID], itemFeatureArray[itemID]);
 	}
 
-	// 向量点乘函数
 	public static double dotMultiply(double[] x, double[] y) {
 		double sum = 0;
 		for (int i = 0; i < x.length; i++) {
@@ -445,7 +410,6 @@ public abstract class CommonRecomm_NoBias implements ComonRecommInterface {
 		return sum;
 	}
 
-	// 向量加
 	public static void vectorAdd(double[] first, double[] second,
 			double[] result) {
 		for (int i = 0; i < first.length; i++) {
@@ -453,7 +417,6 @@ public abstract class CommonRecomm_NoBias implements ComonRecommInterface {
 		}
 	}
 
-	// 向量减
 	public static void vectorSub(double[] first, double[] second,
 			double[] result) {
 		for (int i = 0; i < first.length; i++) {
@@ -461,7 +424,6 @@ public abstract class CommonRecomm_NoBias implements ComonRecommInterface {
 		}
 	}
 
-	// 向量乘
 	public static void vectorMutiply(double[] vector, double time,
 			double[] result) {
 		for (int i = 0; i < vector.length; i++) {
@@ -502,7 +464,6 @@ public abstract class CommonRecomm_NoBias implements ComonRecommInterface {
 		return ratingHat;
 	}
 
-	// 该函数用以将超界的prediction进行截断，可些微提高预测准确率
 	public double smoothPrediction(double ratingHat) {
 		if (ratingHat > maxRating)
 			ratingHat = maxRating;
@@ -539,15 +500,15 @@ public abstract class CommonRecomm_NoBias implements ComonRecommInterface {
 	{
 	    int i, j;
 	    for(i=0; i<a.length; i++)
-	    {         //表示n次排序过程。
+	    {    
 	        for(j=1; j<a.length-i; j++)
 	        {
-	            if(a[j-1] > a[j])      //前面的数字大于后面的数字就交换
+	            if(a[j-1] > a[j])     
 	            {               
 
 	            	double temp;
 	                temp = a[j-1];
-	                a[j-1] = a[j];  //交换a[j-1]和a[j]
+	                a[j-1] = a[j];
 	                a[j]=temp;
 	            }
 	        }
@@ -640,13 +601,10 @@ public abstract class CommonRecomm_NoBias implements ComonRecommInterface {
 	}
 		
 	
-	//-------------------------fuzzyPID------------------------------
-	
-	
-	//去模糊函数	
 	public static double outFuzzy(double value1, double v1, double value2, double v2) {
 		double temp = value1 * v1 + value2 * v2;
 		return temp;
 	}
 		
 }
+
