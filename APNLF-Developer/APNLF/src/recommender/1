@@ -1,0 +1,225 @@
+package recommender;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+
+import recommender.common.CommonRecomm_NoBias;
+import recommender.common.RTuple;
+
+//浣跨敤Tikhonov姝ｅ垯鍖栵紝涓嶅甫鏈夌嚎鎬у亸宸殑NMF
+public class RSNMF extends CommonRecomm_NoBias 
+{
+
+	public RSNMF() throws NumberFormatException, IOException 
+	{
+		super();
+		this.ifBi = true;
+		this.ifBu = true;
+		this.ifMu = false;
+	}
+	
+	public static double beta =2;
+	public void train() throws IOException 
+	{
+		for (int round = 1; round <= trainingRound; round++) 
+		{
+			// 灏嗙浉鍏崇殑杈呭姪鍙橀噺缃负0
+			resetNMFAuxArrays();
+			for (RTuple tempRating : trainData) 
+			{
+				// 姝ゅ寮�濮嬪涔�
+				double ratingHat = this.getLocPrediction(tempRating.iUserID,
+						tempRating.iItemID, this.ifMu, this.ifBi, this.ifBu);
+                
+				// 璁板綍Bias涓婄殑瀛︿範澧為噺
+				userBiasUp[tempRating.iUserID] += tempRating.dRating;
+				userBiasDown[tempRating.iUserID] += ratingHat;	
+				itemBiasUp[tempRating.iItemID] += tempRating.dRating;
+				itemBiasDown[tempRating.iItemID] += ratingHat;	
+							
+				if(beta == 0 )
+				{
+					for (int dimen = 0; dimen < featureDimension; dimen++)
+					{			
+						userFactorUp[tempRating.iUserID][dimen] += itemFeatureArray[tempRating.iItemID][dimen]
+								* tempRating.dRating/ratingHat/ratingHat;
+
+//					    userFactorDown[tempRating.iUserID][dimen] += itemFeatureArray[tempRating.iItemID][dimen]
+//								/ratingHat+lambda*userFeatureArray[tempRating.iUserID][dimen];
+					    
+					    userFactorDown[tempRating.iUserID][dimen] += itemFeatureArray[tempRating.iItemID][dimen]
+								/Math.log(2)/ratingHat+lambda*userFeatureArray[tempRating.iUserID][dimen];
+
+					    itemFactorUp[tempRating.iItemID][dimen] += userFeatureArray[tempRating.iUserID][dimen]
+								* tempRating.dRating/ratingHat/ratingHat;
+
+//						itemFactorDown[tempRating.iItemID][dimen] += userFeatureArray[tempRating.iUserID][dimen]
+//								/ratingHat+lambda*itemFeatureArray[tempRating.iItemID][dimen];
+						
+						itemFactorDown[tempRating.iItemID][dimen] += userFeatureArray[tempRating.iUserID][dimen]
+								/Math.log(2)/ratingHat+lambda*itemFeatureArray[tempRating.iItemID][dimen];
+					}
+				}
+			
+				if(beta == 1 )
+					{
+					for (int dimen = 0; dimen < featureDimension; dimen++)
+					{
+					userFactorUp[tempRating.iUserID][dimen] += itemFeatureArray[tempRating.iItemID][dimen]
+					* tempRating.dRating/ratingHat;
+
+			        userFactorDown[tempRating.iUserID][dimen] += itemFeatureArray[tempRating.iItemID][dimen]
+					+userFeatureArray[tempRating.iUserID][dimen]*lambda;
+
+	
+			        itemFactorUp[tempRating.iItemID][dimen] += userFeatureArray[tempRating.iUserID][dimen]
+					* tempRating.dRating/ratingHat;
+
+		         	itemFactorDown[tempRating.iItemID][dimen] += userFeatureArray[tempRating.iUserID][dimen]
+			        +itemFeatureArray[tempRating.iItemID][dimen]*lambda; 
+					}
+					}
+					else 
+					{
+					for (int dimen = 0; dimen < featureDimension; dimen++)
+					{
+					userFactorUp[tempRating.iUserID][dimen] += itemFeatureArray[tempRating.iItemID][dimen]
+							* tempRating.dRating*Math.pow(ratingHat,beta-2);
+					userFactorDown[tempRating.iUserID][dimen] += itemFeatureArray[tempRating.iItemID][dimen]
+							* Math.pow(ratingHat,beta-1)+userFeatureArray[tempRating.iUserID][dimen] * lambda;
+				
+					itemFactorUp[tempRating.iItemID][dimen] += userFeatureArray[tempRating.iUserID][dimen]
+							* tempRating.dRating*Math.pow(ratingHat,beta-2);
+					itemFactorDown[tempRating.iItemID][dimen] += userFeatureArray[tempRating.iUserID][dimen]
+							*Math.pow(ratingHat,beta-1)+itemFeatureArray[tempRating.iItemID][dimen] * lambda;
+					}
+			    	}	
+
+			}
+			// 灏嗘墍鏈夌殑澧為噺锛屾牴鎹敤鎴峰拰椤圭洰鐨処D锛屽姞鍒扮浉搴旂殑闅愬悜閲忎笂
+			for (int tempUserID = 1; tempUserID <= maxUserID; tempUserID++) {
+				//姝ゅ杩涜Tikhonov姝ｅ垯鍖�
+				userBiasDown[tempUserID] += userBias[tempUserID] * userRSetSize[tempUserID] * lambda;
+				if(userBiasDown[tempUserID] != 0)
+					userBias[tempUserID] *= (userBiasUp[tempUserID]/userBiasDown[tempUserID]);
+				
+				for (int dimen = 0; dimen < featureDimension; dimen++) 
+				{
+//					userFactorDown[tempUserID][dimen] += userFeatureArray[tempUserID][dimen]
+//							* userRSetSize[tempUserID] * lambda;
+					if (userFactorDown[tempUserID][dimen] != 0)
+						userFeatureArray[tempUserID][dimen] *= (userFactorUp[tempUserID][dimen] / userFactorDown[tempUserID][dimen]);
+				}
+			}
+
+			for (int tempItemID = 1; tempItemID <= maxItemID; tempItemID++) {
+				//姝ゅ杩涜Tikhonov姝ｅ垯鍖�
+				itemBiasDown[tempItemID] += itemBias[tempItemID] * itemRSetSize[tempItemID] * lambda;
+				if(itemBiasDown[tempItemID] != 0)
+					itemBias[tempItemID] *= (itemBiasUp[tempItemID]/itemBiasDown[tempItemID]);
+			
+				for (int dimen = 0; dimen < featureDimension; dimen++)
+				{
+//					itemFactorDown[tempItemID][dimen] += itemFeatureArray[tempItemID][dimen]
+//							* itemRSetSize[tempItemID] * lambda;
+					if (itemFactorDown[tempItemID][dimen] != 0) {
+						itemFeatureArray[tempItemID][dimen] *= (itemFactorUp[tempItemID][dimen] / itemFactorDown[tempItemID][dimen]);
+					}
+				}
+			}
+//////////////////////////////////////////////////////////////////////////////////
+			// 璁＄畻鏈疆璁粌缁撴潫鍚庯紝鍦ㄦ祴璇曢泦涓婄殑RMSE////
+//			double sumRMSE = 0, sumCount = 0, sumMAE = 0;
+//			for (RTuple tempTestRating : testData)
+//			{
+//				double actualRating = tempTestRating.dRating;
+//				double ratinghat = this.getLocPrediction(
+//						tempTestRating.iUserID, tempTestRating.iItemID);
+//
+//				sumRMSE += Math.pow((actualRating - ratinghat),2);
+//				//sumMAE += Math.abs(actualRating - ratinghat);
+//				sumCount++;
+//			}
+//
+//			double RMSE = Math.sqrt(sumRMSE / sumCount);
+//			//double RMSE = sumMAE / sumCount;
+//
+//			System.out.println(round + "\t" + RMSE );
+//			///////////////////////////////////////////////////////
+//	
+//			if (this.minMAE > RMSE) 
+//			{
+//				this.minMAE = RMSE;                  ///鏈�灏忕簿搴﹀��
+//				this.minRound = round;               ///鍙栧緱鏈�灏忕簿搴﹀�肩殑璁粌杞暟
+//			} 
+//			else
+//			{
+//				// 濡傛灉MAE鎸佺画涓婂崌鐨勮疆鏁拌秴杩囬槇鍊硷紝鍒欐帹鍑�
+//				if ((round - this.minRound) >= delayCount) 
+//				{
+//					break;
+//				}
+//			}
+			
+			int i= 0;
+			for (RTuple tempTestRating : testData)
+			{
+				if(tempTestRating.iUserID == clectnum)
+				{				
+					double ratinghat = this.getLocPrediction(tempTestRating.iUserID, tempTestRating.iItemID);
+					//System.out.println(tempTestRating.iUserID+ "\t" +tempTestRating.iItemID + "\t" + ratinghat );
+					prerating[i] = ratinghat;
+					preindex[i] = i;
+					idearating[i] = tempTestRating.dRating;
+					realrating[i] = tempTestRating.dRating;
+					ideaindex[i] = i;
+					i++;
+				}
+			}
+			quickSort(prerating,preindex,0,prerating.length-1);
+			quickSort(idearating,ideaindex,0,prerating.length-1);
+//			for(int j=0;j<Num-1;j++)
+//			{
+//			  System.out.println(prerating[j]+ "\t" +preindex[j]);
+//			}	
+//			for(int j=0;j<Num-1;j++)
+//			{
+//			  System.out.println(idearating[j]+ "\t" +ideaindex[j]);
+//			}
+			NDCG(preindex, realrating, ideaindex);
+			System.out.println(NDCGresult);			
+		}
+		//System.out.println(this.minMAE );
+		//////////////////////////////////////TOP-N//////////////////////////////////////////////////////
+		////////////////////////////////////////////////////////////////////////////////////////////		
+	}
+
+	public static void main(String[] argv) throws NumberFormatException,
+			IOException
+	{
+		CommonRecomm_NoBias.initializeRatings(
+				"train.txt",
+				"test.txt", "::");
+		CommonRecomm_NoBias.lambda = 0.05;
+		CommonRecomm_NoBias.trainingRound = 1000;
+		CommonRecomm_NoBias.featureDimension = 20;
+		CommonRecomm_NoBias.delayCount = 50;
+		CommonRecomm_NoBias.Num();
+		CommonRecomm_NoBias.initiStaticFeatures();
+						
+		//do
+		//{		      
+			RSNMF testBRISMF = new RSNMF();
+			//testBRISMF.printNegativeFeature();
+			testBRISMF.train();		
+		    //beta += 0.1;
+		//}
+		//while(beta<=4.1);
+	}
+}
+
+
+
+
+
