@@ -7,7 +7,6 @@ import java.io.IOException;
 import recommender.common.CommonRecomm_NoBias;
 import recommender.common.RTuple;
 
-//浣跨敤Tikhonov姝ｅ垯鍖栵紝涓嶅甫鏈夌嚎鎬у亸宸殑NMF
 public class RSNMF extends CommonRecomm_NoBias 
 {
 
@@ -24,15 +23,11 @@ public class RSNMF extends CommonRecomm_NoBias
 	{
 		for (int round = 1; round <= trainingRound; round++) 
 		{
-			// 灏嗙浉鍏崇殑杈呭姪鍙橀噺缃负0
 			resetNMFAuxArrays();
 			for (RTuple tempRating : trainData) 
 			{
-				// 姝ゅ寮�濮嬪涔�
 				double ratingHat = this.getLocPrediction(tempRating.iUserID,
 						tempRating.iItemID, this.ifMu, this.ifBi, this.ifBu);
-                
-				// 璁板綍Bias涓婄殑瀛︿範澧為噺
 				userBiasUp[tempRating.iUserID] += tempRating.dRating;
 				userBiasDown[tempRating.iUserID] += ratingHat;	
 				itemBiasUp[tempRating.iItemID] += tempRating.dRating;
@@ -97,9 +92,8 @@ public class RSNMF extends CommonRecomm_NoBias
 			    	}	
 
 			}
-			// 灏嗘墍鏈夌殑澧為噺锛屾牴鎹敤鎴峰拰椤圭洰鐨処D锛屽姞鍒扮浉搴旂殑闅愬悜閲忎笂
 			for (int tempUserID = 1; tempUserID <= maxUserID; tempUserID++) {
-				//姝ゅ杩涜Tikhonov姝ｅ垯鍖�
+		
 				userBiasDown[tempUserID] += userBias[tempUserID] * userRSetSize[tempUserID] * lambda;
 				if(userBiasDown[tempUserID] != 0)
 					userBias[tempUserID] *= (userBiasUp[tempUserID]/userBiasDown[tempUserID]);
@@ -114,7 +108,7 @@ public class RSNMF extends CommonRecomm_NoBias
 			}
 
 			for (int tempItemID = 1; tempItemID <= maxItemID; tempItemID++) {
-				//姝ゅ杩涜Tikhonov姝ｅ垯鍖�
+			
 				itemBiasDown[tempItemID] += itemBias[tempItemID] * itemRSetSize[tempItemID] * lambda;
 				if(itemBiasDown[tempItemID] != 0)
 					itemBias[tempItemID] *= (itemBiasUp[tempItemID]/itemBiasDown[tempItemID]);
@@ -128,8 +122,7 @@ public class RSNMF extends CommonRecomm_NoBias
 					}
 				}
 			}
-//////////////////////////////////////////////////////////////////////////////////
-			// 璁＄畻鏈疆璁粌缁撴潫鍚庯紝鍦ㄦ祴璇曢泦涓婄殑RMSE////
+
 //			double sumRMSE = 0, sumCount = 0, sumMAE = 0;
 //			for (RTuple tempTestRating : testData)
 //			{
@@ -146,16 +139,16 @@ public class RSNMF extends CommonRecomm_NoBias
 //			//double RMSE = sumMAE / sumCount;
 //
 //			System.out.println(round + "\t" + RMSE );
-//			///////////////////////////////////////////////////////
+
 //	
 //			if (this.minMAE > RMSE) 
 //			{
-//				this.minMAE = RMSE;                  ///鏈�灏忕簿搴﹀��
-//				this.minRound = round;               ///鍙栧緱鏈�灏忕簿搴﹀�肩殑璁粌杞暟
+//				this.minMAE = RMSE;                 
+//				this.minRound = round;              
 //			} 
 //			else
 //			{
-//				// 濡傛灉MAE鎸佺画涓婂崌鐨勮疆鏁拌秴杩囬槇鍊硷紝鍒欐帹鍑�
+
 //				if ((round - this.minRound) >= delayCount) 
 //				{
 //					break;
@@ -191,8 +184,7 @@ public class RSNMF extends CommonRecomm_NoBias
 			System.out.println(NDCGresult);			
 		}
 		//System.out.println(this.minMAE );
-		//////////////////////////////////////TOP-N//////////////////////////////////////////////////////
-		////////////////////////////////////////////////////////////////////////////////////////////		
+		
 	}
 
 	public static void main(String[] argv) throws NumberFormatException,
@@ -218,6 +210,7 @@ public class RSNMF extends CommonRecomm_NoBias
 		//while(beta<=4.1);
 	}
 }
+
 
 
 
