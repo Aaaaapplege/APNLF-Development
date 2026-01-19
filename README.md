@@ -1,1 +1,1 @@
-**The relevant code for our proposed APNLF model and partial experimental samples can be found in the directory APNLF Development.****
+**The relevant code for our proposed APNLF model and partial experimental samples can be found in the directory APNLF Development. The main Code is in APNLF-Developer/APNLF/src/recommender/RSNMF.java****
